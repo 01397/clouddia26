@@ -23,6 +23,7 @@ Railway Diagram Editor is a web-based application built with Vite 7, React 19, a
 │   ├── main.tsx     # Application entry point
 │   └── assets/      # Additional assets
 ├── CLAUDE.md        # Project guidance for Claude Code
+├── CONTRIBUTING.md  # Branching and commit message conventions
 ├── index.html       # Main HTML file
 ├── oxlint.json      # Linter configuration
 ├── package.json     # Project dependencies and scripts
@@ -95,6 +96,10 @@ Preview the production build locally:
 ```bash
 pnpm preview
 ```
+
+### Contributing
+
+Please check [CONTRIBUTING.md](./CONTRIBUTING.md) for branch strategy and commit message rules before creating a PR.
 
 ## License
 

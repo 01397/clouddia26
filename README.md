@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This is an experimental repository. There are currently no plans to release a new version of CloudDia.
+
 # Railway Diagram Editor
 
 Railway Diagram Editor is a web-based application built with Vite 7, React 19, and TypeScript. It allows users to create and edit railway diagrams easily and efficiently.

@@ -1,0 +1,32 @@
+{
+  "name": "clouddia26",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsgo -b && vite build",
+    "lint": "oxlint --tsconfig ./tsconfig.json --type-aware --type-check ./src",
+    "format": "oxfmt .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@typescript/native-preview": "latest",
+    "@vitejs/plugin-react": "^5.1.1",
+    "oxfmt": "latest",
+    "oxlint": "latest",
+    "vite": "^7.3.1"
+  },
+  "packageManager": "pnpm@10.30.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

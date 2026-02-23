@@ -41,6 +41,12 @@ RailwayLine is the physical infrastructure management unit:
 
 RailwayLine and DiagramView have clearly separated responsibilities: DiagramView is a display configuration that can be modified independently of infrastructure definitions.
 
+## Key Design Decisions
+
+- Station IDs are derivable via `trackIds → Track.stationId`; `RailwayLine` stores only `trackIds`
+- `Track.lineIds` is an array to support boundary tracks that belong to multiple lines in through service
+- Track kind (platform/mainline/connecting) is derivable from TrackConnection topology; no separate `kind` field
+
 ## Station Time Lookup
 
 Arrival/departure times at a station are retrieved by traversing `TrainSegment.trackTimes` via `trackId → Track.stationId`. A separate `StationTime` model is intentionally absent to avoid duplicating time data.

@@ -1,4 +1,8 @@
-# Train Model (TrainSegment / TrainService)
+# Train Model (Schedule / TrainSegment / TrainService)
+
+## Schedule Ownership
+
+TrainSegment and TrainService are owned by `Schedule`, not by `RailwayFile` directly. Each Schedule represents one timetable variant (e.g. "Weekday", "Holiday"). `RailwayLine`, `Station`, and `TrainType` are shared across Schedules at the file level.
 
 ## Two-Layer Model
 

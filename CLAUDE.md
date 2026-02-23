@@ -1,4 +1,4 @@
-# Railway Diagram Editor
+# CloudDia - Railway Diagram Editor
 
 鉄道ダイヤグラムエディタ（Web SPA）。架空鉄道の時刻表・ダイヤグラムを作成するツール。
 
@@ -33,7 +33,7 @@
 
 - 時刻: 0:00:00起点の秒オフセット（integer）。例: 14400 = 4:00
 - ID: string型
-- ファイル形式: `.rdia`（RailwayFileインターフェースのJSONシリアライズ）
+- ファイル形式: `.cdia`（RailwayFileインターフェースのJSONシリアライズ）
 - 状態管理: Zustandストアがメモリ上で完結。IndexedDBはバックアップのみ
 - ビュー管理: 状態駆動（URLルーティング不要）
 
@@ -50,7 +50,7 @@
 | ADR-003 | プロジェクト構成（React + Vite） |
 | ADR-004 | 線路グラフモデル（Track/TrackConnection） |
 | ADR-005 | 列車モデル（TrainSegment/TrainService分離） |
-| ADR-006 | ファイルフォーマット（JSON, .rdia） |
+| ADR-006 | ファイルフォーマット（JSON, .cdia） |
 | ADR-007 | ダイヤグラム描画（Canvas 2D） |
 | ADR-008 | UIコンポーネントとスタイリング（CSS Modules + Base UI + Storybook） |
 | ADR-009 | UIテスト戦略（Vitest + Chromatic + Playwright） |

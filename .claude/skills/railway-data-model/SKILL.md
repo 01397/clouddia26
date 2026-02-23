@@ -1,6 +1,6 @@
 ---
 name: railway-data-model
-description: Core data model for the railway diagram editor. Use when implementing or modifying features involving tracks, stations, trains, timetables, track connections, TrackTime null rules, DiagramView, or file serialization/deserialization (.rdia format).
+description: Core data model for the railway diagram editor. Use when implementing or modifying features involving tracks, stations, trains, timetables, track connections, TrackTime null rules, DiagramView, or file serialization/deserialization (.cdia format).
 ---
 
 # Railway Data Model
@@ -147,7 +147,7 @@ interface FileMetadata {
 
 ## RailwayFile (Top-level)
 
-The `.rdia` file structure — serialized directly as JSON:
+The `.cdia` file structure — serialized directly as JSON:
 
 ```typescript
 interface RailwayFile {

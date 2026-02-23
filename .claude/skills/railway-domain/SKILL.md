@@ -62,4 +62,4 @@ description: Japanese railway domain glossary mapping Japanese terms to English 
 | Japanese | English Identifier | Notes |
 |----------|-------------------|-------|
 | 路線ファイル | `RailwayFile` | One file per railway network |
-| ファイル拡張子 | `.rdia` | Short for "Railway Diagram" |
+| ファイル拡張子 | `.cdia` | Short for "CloudDia" |

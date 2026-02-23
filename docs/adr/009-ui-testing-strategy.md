@@ -186,6 +186,6 @@ MVPフェーズでは対象を絞り、コアのユーザーフローのみを�
 ## 未決事項（実装フェーズで決定）
 
 - GitHub Actionsのワークフロー設計（Chromatic・Playwrightのジョブ分割方針）
-- Playwrightのテストデータ管理（テスト用`.rdia`ファイルのfixture配置）
+- Playwrightのテストデータ管理（テスト用`.cdia`ファイルのfixture配置）
 - Vitestのカバレッジレポート設定とカバレッジ目標の設定
 - Canvas描画のビジュアルテスト自動化の将来的な検討（OffscreenCanvas + スナップショット比較）

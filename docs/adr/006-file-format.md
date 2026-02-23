@@ -21,7 +21,7 @@
 
 `RailwayFile` インターフェースをそのままJSONシリアライズしたものをファイルとして保存する。
 
-### ファイル拡張子: `.rdia`（Railway Diagram）
+### ファイル拡張子: `.cdia`（Railway Diagram）
 
 ### バージョニング戦略
 

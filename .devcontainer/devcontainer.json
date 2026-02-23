@@ -21,6 +21,7 @@
         "eamodio.gitlens",
         "christian-kohler.path-intellisense",
         "ms-vscode.vscode-typescript-next",
+        "bierner.markdown-mermaid"
         "Anthropic.claude-code"
       ],
       "settings": {

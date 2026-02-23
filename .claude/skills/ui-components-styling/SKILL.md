@@ -1,17 +1,22 @@
 ---
 name: ui-components-styling
-description: UI component architecture and styling conventions for the railway diagram editor. Use when implementing or modifying React components, writing CSS Modules, using Base UI headless components, applying design tokens (CSS variables), or setting up Storybook stories. Covers file layout, class naming, data-state selectors, and Canvas/CSS token sharing.
+description: UI component architecture and styling conventions for the railway diagram editor. Use when implementing or modifying React components, writing CSS Modules, integrating Base UI headless components, applying design tokens (CSS variables), or setting up Storybook stories.
 ---
 
 # UI Components & Styling
 
-## Overview
+## Approach
 
-スタイリング: CSS Modules。アクセシビリティ: Base UI（@base-ui-components/react）に委譲。デザイントークン: CSS変数で一元管理し、Canvas描画値と共有する。コンポーネントカタログ: Storybook 8。
+- **Styling**: CSS Modules (component-scoped, no global naming conflicts)
+- **Accessibility**: Delegated to Base UI (`@base-ui-components/react`) headless components
+- **Design tokens**: CSS custom properties defined in `src/styles/tokens.css`, shared between CSS and Canvas rendering
+- **Component catalog**: Storybook 8
 
-## ファイル配置
+For the full token reference: see [TOKENS.md](TOKENS.md)
 
-コンポーネントと同階層に `.tsx` / `.module.css` / `.stories.tsx` を並べる。
+## File Layout
+
+Place `.tsx`, `.module.css`, and `.stories.tsx` alongside each component:
 
 ```
 src/components/
@@ -27,15 +32,15 @@ src/components/
       TrainLine.module.css
 ```
 
-## CSS Modules 命名規則
+## CSS Modules Naming
 
-BEM不要。コンポーネントスコープを前提にシンプルに保つ。
+Use simple, flat class names within component scope — no BEM required:
 
 ```css
 /* Button.module.css */
-.root     { }   /* ルート要素 */
-.primary  { }   /* バリアント */
-.disabled { }   /* 状態 */
+.root     { }   /* Root element */
+.primary  { }   /* Variant */
+.disabled { }   /* State */
 ```
 
 ```tsx
@@ -48,9 +53,9 @@ import clsx from 'clsx'
 })} />
 ```
 
-## Base UI との組み合わせ
+## Base UI Integration
 
-Base UIは `data-state` / `data-open` / `data-disabled` などの属性を自動付与する。CSS Modulesのセレクタで直接スタイルを当てる。
+Base UI automatically applies `data-state`, `data-open`, `data-disabled`, etc. attributes. Use attribute selectors in CSS Modules to style these states:
 
 ```css
 /* Popover.module.css */
@@ -67,52 +72,7 @@ Base UIは `data-state` / `data-open` / `data-disabled` などの属性を自動
 }
 ```
 
-## デザイントークン（CSS変数）
-
-`src/styles/tokens.css` をグローバルに読み込む。
-
-```css
-:root {
-  /* Color */
-  --color-primary:          #1a56db;
-  --color-surface:          #ffffff;
-  --color-surface-hover:    #f3f4f6;
-  --color-surface-overlay:  #f9fafb;
-  --color-border:           #e5e7eb;
-  --color-text-primary:     #111827;
-  --color-text-secondary:   #6b7280;
-  --color-text-disabled:    #9ca3af;
-
-  /* Spacing (4px base) */
-  --spacing-1:  4px;
-  --spacing-2:  8px;
-  --spacing-3:  12px;
-  --spacing-4:  16px;
-  --spacing-6:  24px;
-  --spacing-8:  32px;
-
-  /* Typography */
-  --font-size-xs:       11px;
-  --font-size-sm:       12px;
-  --font-size-base:     14px;
-  --font-size-lg:       16px;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-bold:   700;
-
-  /* Border */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-
-  /* Z-index */
-  --z-dropdown: 100;
-  --z-modal:    200;
-  --z-toast:    300;
-}
-```
-
-### Canvas側からのトークン参照
+## Sharing Design Tokens with Canvas
 
 ```typescript
 // src/utils/designTokens.ts
@@ -121,7 +81,7 @@ const style = getComputedStyle(document.documentElement)
 export const tokens = {
   colorBorder:      style.getPropertyValue('--color-border').trim(),
   colorTextPrimary: style.getPropertyValue('--color-text-primary').trim(),
-  // 注: 列車種別の色はデータモデル（TrainType.color）から取得するためここには含めない
+  // Train type colors come from TrainType.color in the data model, not from tokens
 }
 ```
 
@@ -135,7 +95,7 @@ import { Button } from './Button'
 const meta: Meta<typeof Button> = {
   component: Button,
   args: {
-    children: 'ボタン',
+    children: 'Button',
     variant: 'primary',
     disabled: false,
   },
@@ -148,9 +108,9 @@ export const Primary: Story = {}
 export const Disabled: Story = { args: { disabled: true } }
 ```
 
-CanvasダイヤグラムコンポーネントはStorybookでモックデータを用いた目視確認に留める（自動テスト対象外）。
+Canvas diagram components use Storybook for manual visual inspection with mock data. Automated pixel-level testing for Canvas output is handled via separate means.
 
-## 採用パッケージ
+## Packages
 
 ```json
 {
@@ -165,11 +125,4 @@ CanvasダイヤグラムコンポーネントはStorybookでモックデータ�
 }
 ```
 
-## 却下済みの選択肢
-
-- **Tailwind CSS**: 多状態UIでクラス名が長くなり保守性が低下するリスク
-- **CSS-in-JS**: ランタイムコストがあり、パフォーマンス要件と相反する
-- **素のCSS**: グローバルスコープの命名衝突リスク
-- **Radix UI**: Base UIはCSS Modulesとの統合が設計レベルで考慮されており、APIの一貫性も高い
-
-詳細な経緯: `docs/adr/008-ui-components-styling.md`
+For design decisions and evaluated alternatives: `docs/adr/008-ui-components-styling.md`

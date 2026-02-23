@@ -1,63 +1,58 @@
 ---
 name: diagram-rendering
-description: Provides Canvas 2D rendering capabilities for visualizing railway diagrams (train timetable graphs). Use this skill for tasks such as implementing diagram views, rendering train lines (suji), performing hit testing for interactions with train segments, handling coordinate transformations between TimeOffset/station indices and pixel coordinates, managing zoom and scroll functionality, or exporting diagram images.
+description: Canvas 2D rendering for railway diagram (train timetable graph) visualization. Use when implementing diagram views, rendering train lines (suji), hit testing for train segment interactions, coordinate transformations between TimeOffset/station indices and pixels, zoom/scroll functionality, or exporting diagram images.
 ---
 
 # Diagram Rendering
 
-## 描画方式
+## Rendering Approach
 
-Canvas 2D を使用。SVG（30,000 DOM要素でオーバーヘッド大）・WebGL（この規模では過剰）は却下済み。
+Canvas 2D handles the expected scale efficiently:
+- ~1,500 trains × ~20 track segments = ~30,000 line segments
+- ~100 station grid lines
+- Dozens of time-axis tick marks
 
-### スケール
+Canvas 2D achieves 60fps at this scale. For the rationale behind choosing Canvas 2D over SVG and WebGL, see `docs/adr/007-diagram-rendering.md`.
 
-- 列車1,500本 × 平均20駅間 = 約30,000本の線分
-- 駅グリッド線: 約100本
-- 時間軸目盛り: 数十本
-
-Canvas 2Dで60fps描画が十分可能な規模。
-
-## 座標系
+## Coordinate System
 
 ```typescript
 interface DiagramViewport {
-  startTime: TimeOffset   // 表示起点時刻
-  endTime: TimeOffset     // 表示終点時刻
-  pixelsPerSecond: number // ズームレベル
+  startTime: TimeOffset    // Display start time
+  endTime: TimeOffset      // Display end time
+  pixelsPerSecond: number  // Zoom level
   pixelsPerStation: number
-  offsetX: number         // スクロールオフセット
+  offsetX: number          // Scroll offset
   offsetY: number
 }
 
-// 時刻 → x座標
+// Time → x coordinate
 const timeToX = (time: TimeOffset, vp: DiagramViewport): number =>
   (time - vp.startTime) * vp.pixelsPerSecond + vp.offsetX
 
-// x座標 → 時刻
+// x coordinate → time
 const xToTime = (x: number, vp: DiagramViewport): TimeOffset =>
   (x - vp.offsetX) / vp.pixelsPerSecond + vp.startTime
 ```
 
-- 横軸: 時間（TimeOffset秒 → px）
-- 縦軸: 駅（インデックス → px）
+- Horizontal axis: time (TimeOffset in seconds → px)
+- Vertical axis: stations (index → px)
 
 ## Hit Testing
 
-クリック・ドラッグ開始時にマウス座標から対象TrainSegmentを特定する。線分との距離判定（許容誤差: 数px）で実装。
+On click/drag start, identify the target TrainSegment from mouse coordinates using distance-to-line-segment calculation with a tolerance of a few pixels.
 
-## 再描画戦略
+## Redraw Strategy
 
-MVPでは単一Canvasで毎フレーム全体を再描画する。
+In the MVP, a single Canvas redraws the entire view on every frame.
 
-再描画トリガー:
-- 列車の時刻変更（編集操作）
-- スクロール・ズーム
-- 選択状態の変更
+Redraw triggers:
+- Train time changes (edit operations)
+- Scroll or zoom
+- Selection state changes
 
-## 将来の最適化（MVP対象外）
+## Post-MVP Optimizations
 
-- レイヤー分割（背景グリッド・列車線・選択ハイライトを別Canvas）
+- Layer separation (background grid, train lines, selection highlight on separate canvases)
 - OffscreenCanvas + Web Worker
-- WebGL移行（描画要素数が大幅増加した場合）
-
-詳細な経緯: `docs/adr/007-diagram-rendering.md`
+- WebGL migration (if element count increases significantly)

@@ -1,58 +1,59 @@
 # Track Graph Model
 
-## グラフ構造
+## Graph Structure
 
-駅構内番線・駅間本線・連絡線をすべて `Track`（Node）で統一表現し、`TrackConnection`（Edge）で有向接続を管理する。
+Tracks (Node) unify platform tracks, mainline segments, and connecting tracks into a single model. TrackConnections (Edge) represent directed connections between Tracks.
 
-この統一モデルにより、以下を追加概念なしに表現できる:
-- 複々線（急行線・緩行線）
-- 駅構内の番線
-- 分岐・連絡線
-- 信号場
-- 駅間に複数路線を経由するケース
+This unified model represents the following without additional concepts:
+- Quadruple tracks (express/local line separation)
+- Station platforms
+- Branch lines and connecting tracks
+- Signal stations (no platforms)
+- Multiple railway lines sharing a route segment
 
-## MVP実装方針
+## MVP Auto-Generation Strategy
 
-MVPではユーザーに「複線/単線」の設定のみを入力させ、TrackとTrackConnectionを自動生成する。グラフ構造をユーザーに意識させない。
+In the MVP, users input only "double/single track" settings and the system auto-generates Tracks and TrackConnections. Users do not interact with the graph structure directly.
 
-### 自動生成例（複線）
+### Auto-generation example (double track)
 
-入力: 代々木上原 → 東北沢（複線）
+Input: Yoyogi-Uehara → Higashi-Kitazawa (double track)
 
 ```
-自動生成されるTrack:
-  - 代々木上原〜東北沢（下り本線）  lineIds: [小田急小田原線]
-  - 代々木上原〜東北沢（上り本線）  lineIds: [小田急小田原線]
-  - 代々木上原・1番線              stationId: 代々木上原
-  - 代々木上原・2番線              stationId: 代々木上原
+Generated Tracks:
+  - Yoyogi-Uehara to Higashi-Kitazawa (outbound mainline)  lineIds: [Odakyu Odawara Line]
+  - Yoyogi-Uehara to Higashi-Kitazawa (inbound mainline)   lineIds: [Odakyu Odawara Line]
+  - Yoyogi-Uehara Platform 1                               stationId: Yoyogi-Uehara
+  - Yoyogi-Uehara Platform 2                               stationId: Yoyogi-Uehara
 
-自動生成されるTrackConnection:
-  - 代々木上原1番線 → 下り本線
-  - 上り本線 → 代々木上原2番線
-  - （以下同様に東北沢側も生成）
+Generated TrackConnections:
+  - Platform 1 → Outbound mainline
+  - Inbound mainline → Platform 2
+  - (Similarly generated for Higashi-Kitazawa side)
 ```
 
-## RailwayLine の責務
+## RailwayLine Responsibility
 
-RailwayLineは物理インフラの管理単位:
-- Trackを路線単位でグループ管理する入れ物
-- 連続区間の重複は許容しない（境界Track/Stationの共有のみ）
-- 湘南新宿ラインのような運転系統はRailwayLineではなく将来の系統モデルで表現する
+RailwayLine is the physical infrastructure management unit:
+- Groups Tracks by line
+- Each continuous segment belongs to exactly one line (only boundary Tracks/Stations are shared between lines)
+- Operating patterns like the Shonan-Shinjuku Line are represented by a future "service pattern" model, not by RailwayLine
 
-RailwayLineとDiagramViewの責務は明確に分離されている。DiagramViewは表示設定であり、インフラ定義とは独立して柔軟に変更できる。
+RailwayLine and DiagramView have clearly separated responsibilities: DiagramView is a display configuration that can be modified independently of infrastructure definitions.
 
-## 駅時刻の取得方法
+## Station Time Lookup
 
-「ある駅での着発時刻」は TrainSegment.trackTimes から `trackId → Track.stationId` を辿って取得する。StationTimeのような別モデルは持たない（時刻情報の二重管理を避けるため）。
+Arrival/departure times at a station are retrieved by traversing `TrainSegment.trackTimes` via `trackId → Track.stationId`. A separate `StationTime` model is intentionally absent to avoid duplicating time data.
 
-MVPではクエリコストを許容し、将来的にキャッシュで最適化する。
+In the MVP, query cost is acceptable. Future optimization via caching is planned.
 
-## MVPで先送りにする機能
+## Post-MVP Features
 
-- 番線の明示的な入力・編集UI
-- 複々線・連絡線・信号場の入力UI
-- Track間の進入可否ルール（TrackConnectionへの制約付与）
-- 競合検出（追い越し・すれ違い違反）
-- `trackId → Station` 逆引きキャッシュ
+The following are deferred to post-MVP:
+- Platform selection/editing UI
+- Quadruple track, connecting track, and signal station editing UI
+- Track entry permission rules (constraints on TrackConnections)
+- Conflict detection (overtaking/passing violations)
+- Reverse lookup cache (`trackId → Station`)
 
-詳細な経緯: `docs/adr/004-track-graph-model.md`
+For detailed ADR: `docs/adr/004-track-graph-model.md`

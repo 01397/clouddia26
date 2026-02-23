@@ -1,59 +1,59 @@
 # Train Model (TrainSegment / TrainService)
 
-## 2層モデルの概要
+## Two-Layer Model
 
-| 概念 | 用途 | 識別子 |
+| Concept | Purpose | Identifier |
 |---|---|---|
-| TrainSegment | 追い越し検知・時刻表表示の単位 | 業務識別子（例: "3001M"） |
-| TrainService | 列車の流れ・旅客案内の単位 | 旅客向け列車名・号数（例: "はやぶさ1号"） |
+| TrainSegment | Unit for conflict detection and timetable display | Operational number (e.g. "3001M", "25M") |
+| TrainService | Unit for passenger guidance and train flow | Passenger-facing name + ordinal (e.g. "Hayabusa No. 1") |
 
-単一の Train モデルでは分割併合を表現できないため分離している。
+A single Train model cannot represent split/join operations, which is why the two-layer separation exists.
 
-## 分割併合の表現
+## Representing Split/Join
 
-1つのSegmentを複数のServiceが共有することで表現する。
+Multiple Services sharing the same Segment represent split/join operations.
 
-### 例: はやぶさ+こまち
+### Example: Hayabusa + Komachi
 
 ```
-TrainSegment A: number="3001M"  東京→盛岡（併結区間）
-TrainSegment B: number="3001M"  盛岡→新青森
-TrainSegment C: number="25M"    盛岡→秋田
+TrainSegment A: number="3001M"  Tokyo → Morioka (coupled section)
+TrainSegment B: number="3001M"  Morioka → Shin-Aomori
+TrainSegment C: number="25M"    Morioka → Akita
 
-TrainService「はやぶさ1号」: [A(through) → B(split)]
-TrainService「こまち1号」:   [A(through) → C(split)]
+TrainService "Hayabusa No. 1": [A(through) → B(split)]
+TrainService "Komachi No. 1":  [A(through) → C(split)]
 ```
 
-こまち視点でSegment Aの列車番号は"3001M"（はやぶさ番号）だが、Serviceが異なるSegmentを参照しているだけであり整合性上問題ない。
+From Komachi's perspective, Segment A uses Hayabusa's train number "3001M" — this is correct because a different Service simply references the same Segment.
 
-## 直通・種別変更の表現
+## Representing Through Service / Type Changes
 
-Serviceが複数Segmentを順序付きで参照することで表現する。途中で列車番号や種別が変わるケースに対応。
+A Service references multiple Segments in order, handling cases where train numbers or types change mid-route.
 
-## connectionType
+## connectionType Values
 
-`TrainServiceSegmentRef.connectionType` の値:
-- `through`: 直通・種別変更（同一編成が継続）
-- `split`: 分割（併結列車から切り離し）
-- `join`: 併合（単独列車が併結）
+`TrainServiceSegmentRef.connectionType`:
+- `through`: Through service or type change (same rolling stock continues)
+- `split`: Split (detached from coupled train)
+- `join`: Join (single train couples with another)
 
-MVPでは参照情報として保持のみ。バリデーションや行路モデルとの連携は将来拡張。
+In the MVP, these are stored as reference information only. Validation and integration with operation models are future extensions.
 
-## TrackTimes（走行経路）
+## TrackTimes (Route)
 
-TrainSegmentは走行したTrackを `trackTimes: TrackTime[]` として走行順に持つ。OuDia的な「経由なし」フラグは不要（どのTrackを通ったかが明示されるため）。
+A TrainSegment holds the tracks it travels through, in order, as `trackTimes: TrackTime[]`. The explicit list of visited tracks makes a separate "no intermediate stops" flag unnecessary.
 
-## MVP方針
+## MVP Scope
 
-- TrainServiceとTrainSegmentは両方必須
-- MVPでは1:1対応を前提とした機能のみ提供
-- 分割併合・直通の編集UIは将来拡張で解放
-- Service内の境界Station整合性バリデーションは実装フェーズで詳細決定
+- Both TrainService and TrainSegment are required from the start
+- MVP functionality assumes 1:1 correspondence between Service and Segment
+- Split/join and through service editing UI are deferred to post-MVP
+- Boundary Station consistency validation details are determined during implementation
 
-## 境界Stationのバリデーション方針
+## Boundary Station Validation
 
-Service内で隣接するSegment間の整合性:
-- Segment Aの終着駅 = Segment Bの始発駅
-- Segment Aの終着番線Track と Segment Bの始発番線Trackが同一または接続関係にある
+For adjacent Segments within a Service:
+- Final station of Segment A = First station of Segment B
+- Final platform Track of Segment A and first platform Track of Segment B are identical or connected
 
-詳細な経緯: `docs/adr/005-train-segment-service.md`
+For detailed ADR: `docs/adr/005-train-segment-service.md`

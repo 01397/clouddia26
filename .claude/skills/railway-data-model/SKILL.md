@@ -1,41 +1,29 @@
 ---
 name: railway-data-model
-description: Railway diagram editor core data model including Track graph topology, TrainSegment/TrainService separation, station/timetable types, TrackTime null rules, and RailwayFile structure. Use when implementing or modifying features involving tracks, stations, trains, timetables, segments, services, connections, TrackTime, time offsets, directions, stop types, destinations, DiagramView, or file serialization/deserialization (.rdia format).
+description: Core data model for the railway diagram editor. Use when implementing or modifying features involving tracks, stations, trains, timetables, track connections, TrackTime null rules, DiagramView, or file serialization/deserialization (.rdia format).
 ---
 
 # Railway Data Model
 
-## Overview
+One railway network per `RailwayFile`. Track structure uses a graph model (Track = Node, TrackConnection = Edge). Trains use a two-layer model: TrainSegment (operational unit) and TrainService (passenger service unit).
 
-1路線網を1ファイル（`RailwayFile`）で管理する。線路構造はグラフモデル（Track=Node, TrackConnection=Edge）で表現し、列車は運行単位（TrainSegment）とサービス単位（TrainService）の2層で管理する。
-
-## Type Definitions
-
-### Basic Types
+## Basic Types
 
 ```typescript
-/** 秒オフセット（0:00:00 起点）。例: 14400 = 4:00, 86400 = 24:00 */
-type TimeOffset = number
-
+type TimeOffset = number  // Seconds from 00:00:00. e.g. 14400 = 4:00, 86400 = 24:00
 type Id = string
-
 type Direction = 'outbound' | 'inbound'
-
 type StopType = 'stop' | 'pass'
 ```
 
-### Track Graph
-
-Track/TrackConnectionの設計詳細は [TRACK_GRAPH.md](TRACK_GRAPH.md) を参照。
+## Track Graph
 
 ```typescript
 interface Track {
   id: Id
   name: string
-  /** 通常1路線に帰属。直通運転の境界Trackのみ複数 */
-  lineIds: Id[]
-  /** 番線Trackのみ駅を参照。駅間本線・連絡線はnull */
-  stationId: Id | null
+  lineIds: Id[]        // Usually one line; boundary tracks for through service may belong to multiple
+  stationId: Id | null // Platform tracks reference a station; mainline/connecting tracks are null
 }
 
 interface TrackConnection {
@@ -47,28 +35,25 @@ interface TrackConnection {
 interface Station {
   id: Id
   name: string
-  /** キロ程（km）。路線始端からの距離 */
-  kilometrage: number
-  /** この駅に属する番線TrackのIDリスト */
-  trackIds: Id[]
+  kilometrage: number  // Distance from line start (km)
+  trackIds: Id[]       // Platform Track IDs belonging to this station
 }
 
 interface RailwayLine {
   id: Id
   name: string
-  /** この路線に属するTrackのIDリスト */
-  trackIds: Id[]
+  trackIds: Id[]       // Track IDs belonging to this line
 }
 ```
 
-**設計判断:**
-- `Track.kind` は持たない（TrackConnectionから導出可能、冗長排除）
-- `RailwayLine.stationIds` は持たない（trackIds → Track.stationId から導出可能）
-- `Track.lineIds` が配列な理由: 直通運転の境界Trackが複数路線に帰属するため
+**Key design decisions:**
+- Station IDs are derivable via `trackIds → Track.stationId`; `RailwayLine` stores only `trackIds`
+- `Track.lineIds` is an array to support boundary tracks that belong to multiple lines in through service
+- Track kind (platform/mainline/connecting) is derivable from TrackConnection topology; no separate `kind` field
 
-### Train Model
+For graph topology and MVP auto-generation: see [TRACK_GRAPH.md](TRACK_GRAPH.md)
 
-TrainSegment/TrainServiceの設計詳細は [TRAIN_MODEL.md](TRAIN_MODEL.md) を参照。
+## Train Model
 
 ```typescript
 interface TrackTime {
@@ -85,7 +70,7 @@ interface Destination {
 
 interface TrainSegment {
   id: Id
-  number: string        // 業務識別子（例: "3001M"）
+  number: string        // Operational identifier (e.g. "3001M")
   typeId: Id
   direction: Direction
   destination: Destination
@@ -100,33 +85,35 @@ interface TrainServiceSegmentRef {
 
 interface TrainService {
   id: Id
-  name: string | null    // 旅客向け列車名（例: "はやぶさ"）
-  number: string | null   // 旅客向け号数（例: "1号"）
+  name: string | null    // Passenger-facing train name (e.g. "Hayabusa")
+  number: string | null  // Passenger-facing ordinal (e.g. "No. 1")
   segmentRefs: TrainServiceSegmentRef[]
 }
 ```
 
-### TrackTime Null Rules
+For split/join/through service patterns: see [TRAIN_MODEL.md](TRAIN_MODEL.md)
 
-バリデーションで担保する。
+## TrackTime Null Rules
 
-| Track種別 | entryTime | exitTime |
+Enforced by validation:
+
+| Track Type | entryTime | exitTime |
 |---|---|---|
-| 駅間本線Track | null | null |
-| 始発番線Track | null | 必須 |
-| 終着番線Track | 必須 | null |
-| 通過駅番線Track | optional | optional |
-| その他の番線Track | 必須 | 必須 |
+| Mainline Track (between stations) | null | null |
+| First departure platform Track | null | required |
+| Final arrival platform Track | required | null |
+| Pass-through station platform Track | optional | optional |
+| Other platform Track | required | required |
 
-通過駅番線Trackのoptionalの理由: 通過待ちで他列車の発着が通過時刻に依存するケースがある。
+Pass-through platform tracks use `optional` because passing time may affect other trains' schedules at that station.
 
-### Other Types
+## Other Types
 
 ```typescript
 interface TrainType {
   id: Id
-  name: string       // "特急", "準特急", "普通"
-  shortName: string  // "特", "準特", "普"
+  name: string       // e.g. "Express", "Local"
+  shortName: string  // e.g. "Exp", "Loc"
   color: string      // CSS color
   lineStyle: 'solid' | 'dashed' | 'dotted'
   lineWidth: number
@@ -146,8 +133,8 @@ interface DiagramView {
 }
 
 interface DiagramDisplaySettings {
-  startTime: TimeOffset  // デフォルト: 14400 (4:00)
-  endTime: TimeOffset    // デフォルト: 100800 (28:00)
+  startTime: TimeOffset  // Default: 14400 (4:00)
+  endTime: TimeOffset    // Default: 100800 (28:00)
 }
 
 interface FileMetadata {
@@ -158,9 +145,9 @@ interface FileMetadata {
 }
 ```
 
-### RailwayFile (Top-level)
+## RailwayFile (Top-level)
 
-`.rdia` ファイルの構造。このインターフェースをそのままJSONシリアライズする。
+The `.rdia` file structure — serialized directly as JSON:
 
 ```typescript
 interface RailwayFile {

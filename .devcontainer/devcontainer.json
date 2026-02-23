@@ -17,13 +17,11 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        // Oxc tools
         "oxc.oxc-vscode",
-        // Git
         "eamodio.gitlens",
-        // Developer experience
         "christian-kohler.path-intellisense",
-        "ms-vscode.vscode-typescript-next"
+        "ms-vscode.vscode-typescript-next",
+        "Anthropic.claude-code"
       ],
       "settings": {
         "editor.defaultFormatter": "oxc.oxc-vscode",
